@@ -1,5 +1,6 @@
 package com.example.test.presentation.login
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -7,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.test.R
+import com.example.test.presentation.product.product.ProductListActivity
 
 class LoginActivity : AppCompatActivity() {
 
@@ -41,7 +43,10 @@ class LoginActivity : AppCompatActivity() {
 
         viewModel.loginResult.observe(this) { result ->
             if (result) {
-                Toast.makeText(this, "Login exitoso", Toast.LENGTH_SHORT).show()
+                // Navegar a ProductListActivity si el login es exitoso
+                val intent = Intent(this, ProductListActivity::class.java)
+                startActivity(intent)
+                finish() // Finalizamos la LoginActivity para no volver a esta pantalla con "Back"
             } else {
                 Toast.makeText(this, "Credenciales incorrectas", Toast.LENGTH_SHORT).show()
             }

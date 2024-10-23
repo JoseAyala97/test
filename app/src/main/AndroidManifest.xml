@@ -29,6 +29,13 @@
             </intent-filter>
         </activity>
 
+        <!-- ProductListActivity será la pantalla segundaria -->
+        <activity
+            android:name=".presentation.product.product.ProductListActivity"
+            android:exported="true"
+            android:label="Products"
+            android:theme="@style/Theme.Test" />
+
         <!-- MainActivity sigue estando disponible -->
         <activity
             android:name=".MainActivity"
