@@ -1,22 +1,22 @@
 package com.example.test.presentation.product.product
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.test.R
+import com.example.test.databinding.ItemProductBinding
 import com.example.test.domain.Product
 
-class ProductAdapter(private val onClick: (Product) -> Unit) :
-    ListAdapter<Product, ProductAdapter.ProductViewHolder>(DiffCallback()) {
+class ProductAdapter(
+    private val onQuantityChanged: (Product, Int) -> Unit
+) : ListAdapter<Product, ProductAdapter.ProductViewHolder>(ProductDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_product, parent, false)
-        return ProductViewHolder(view, onClick)
+        val binding = ItemProductBinding.inflate(
+            LayoutInflater.from(parent.context), parent, false
+        )
+        return ProductViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
@@ -24,21 +24,43 @@ class ProductAdapter(private val onClick: (Product) -> Unit) :
         holder.bind(product)
     }
 
-    class ProductViewHolder(
-        itemView: View,
-        private val onClick: (Product) -> Unit
-    ) : RecyclerView.ViewHolder(itemView) {
-        private val productName: TextView = itemView.findViewById(R.id.textViewProductName)
-        private val productPrice: TextView = itemView.findViewById(R.id.textViewProductPrice)
+    inner class ProductViewHolder(
+        private val binding: ItemProductBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+
+        private var currentQuantity = 0
 
         fun bind(product: Product) {
-            productName.text = product.name
-            productPrice.text = "$${product.price}"
-            itemView.setOnClickListener { onClick(product) }
+            binding.tvProductName.text = product.name
+            binding.tvProductPrice.text = "$${product.price}"
+            binding.cbSelect.isChecked = false
+            binding.tvQuantity.text = currentQuantity.toString()
+
+            binding.btnPlus.setOnClickListener {
+                currentQuantity++
+                binding.tvQuantity.text = currentQuantity.toString()
+                onQuantityChanged(product, currentQuantity)
+            }
+
+            binding.btnMinus.setOnClickListener {
+                if (currentQuantity > 0) {
+                    currentQuantity--
+                    binding.tvQuantity.text = currentQuantity.toString()
+                    onQuantityChanged(product, currentQuantity)
+                }
+            }
+
+            binding.cbSelect.setOnCheckedChangeListener { _, isChecked ->
+                if (!isChecked) {
+                    currentQuantity = 0
+                    binding.tvQuantity.text = "0"
+                    onQuantityChanged(product, 0)
+                }
+            }
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<Product>() {
+    class ProductDiffCallback : DiffUtil.ItemCallback<Product>() {
         override fun areItemsTheSame(oldItem: Product, newItem: Product): Boolean {
             return oldItem.id == newItem.id
         }

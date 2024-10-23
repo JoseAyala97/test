@@ -3,14 +3,16 @@ package com.example.test.presentation.product.product
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.test.R
-import com.example.test.presentation.login.LoginActivity
 import com.example.test.data.ProductRepositoryImpl
+import com.example.test.domain.CartItem
+import com.example.test.domain.Product
+import com.example.test.presentation.cart.CartActivity
+import com.example.test.presentation.login.LoginActivity
 
 class ProductListActivity : AppCompatActivity() {
 
@@ -19,12 +21,15 @@ class ProductListActivity : AppCompatActivity() {
         ProductViewModelFactory(ProductRepositoryImpl())
     }
 
+    private val selectedProducts = mutableMapOf<Product, Int>()  // Mapa para guardar productos seleccionados
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_product_list)
 
         initRecyclerView()
         setupLogoutButton()
+        setupCartButton()  // Asegúrate de llamar esta función.
         observeViewModel()
 
         viewModel.loadProducts()
@@ -34,10 +39,25 @@ class ProductListActivity : AppCompatActivity() {
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewProducts)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        productAdapter = ProductAdapter { product ->
-            Toast.makeText(this, "Producto: ${product.name}", Toast.LENGTH_SHORT).show()
+        // Solo pasamos el callback, no una lista inicial.
+        productAdapter = ProductAdapter { product, quantity ->
+            updateSelectedProducts(product, quantity)
         }
+
         recyclerView.adapter = productAdapter
+    }
+
+    private fun setupCartButton() {
+        val btnCart = findViewById<Button>(R.id.btnCart)
+        btnCart.setOnClickListener {
+            val selectedProductsList = selectedProducts.entries.map {
+                CartItem(it.key, it.value)
+            }
+
+            val intent = Intent(this, CartActivity::class.java)
+            intent.putParcelableArrayListExtra("selectedProducts", ArrayList(selectedProductsList))
+            startActivity(intent)
+        }
     }
 
     private fun setupLogoutButton() {
@@ -56,7 +76,15 @@ class ProductListActivity : AppCompatActivity() {
 
     private fun observeViewModel() {
         viewModel.products.observe(this) { products ->
-            productAdapter.submitList(products)
+            productAdapter.submitList(products)  // Ahora funciona correctamente.
+        }
+    }
+
+    private fun updateSelectedProducts(product: Product, quantity: Int) {
+        if (quantity > 0) {
+            selectedProducts[product] = quantity
+        } else {
+            selectedProducts.remove(product)
         }
     }
 }
